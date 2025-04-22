@@ -100,7 +100,26 @@ services:
       retries: 5
       start_period: 5s
     restart: always
-
+  clickhouse:
+    image: clickhouse/clickhouse-server:latest
+    container_name: clickhouse
+    ports:
+      - "8123:8123"  # HTTP-интерфейс
+      - "9001:9000"  # Native protocol
+    volumes:
+      - clickhouse-data:/var/lib/clickhouse
+      - clickhouse-config:/etc/clickhouse-server/
+    environment:
+      CLICKHOUSE_DB: airflow_data
+      CLICKHOUSE_USER: airflow
+      CLICKHOUSE_PASSWORD: airflow
+      CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT: "1"  # Для удобства разработки
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://localhost:8123/ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      
   redis:
     # Redis is limited to 7.2-bookworm due to licencing change
     # https://redis.io/blog/redis-adopts-dual-source-available-licensing/
@@ -294,7 +313,7 @@ services:
       - minio-data:/data
     ports:
       - "9000:9000"  # API (S3)
-      - "9001:9001"  # Web-консоль
+      - "9002:9001"  # Web-консоль
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
       interval: 30s
@@ -304,3 +323,5 @@ services:
 volumes:
   postgres-db-volume:
   minio-data:
+  clickhouse-data:
+  clickhouse-config:
