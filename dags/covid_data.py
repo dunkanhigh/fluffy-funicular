@@ -39,7 +39,7 @@ with DAG(dag_id='covid_data',
          default_args=default_args):
     to_s3 = PythonOperator(task_id='get_and_upload_to_s3',
                            python_callable=upload_dataset)
-    lala = ClickHouseOperator(sql="""
+    lala = ClickHouseOperator(task_id='create_table', sql="""
 CREATE TABLE covid
 (date Date,
 county String,
