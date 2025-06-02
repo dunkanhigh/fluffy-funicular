@@ -104,8 +104,8 @@ services:
     image: clickhouse/clickhouse-server:latest
     container_name: clickhouse
     ports:
-      - "8123:8123"  # HTTP-интерфейс
-      - "9001:9000"  # Native protocol
+      - "8123:8123"
+      - "9001:9000"
     volumes:
       - clickhouse-data:/var/lib/clickhouse
       - clickhouse-config:/etc/clickhouse-server/
@@ -319,9 +319,36 @@ services:
       interval: 30s
       timeout: 20s
       retries: 3
+  superset:
+    image: apache/superset:4.1.2
+    container_name: superset
+    ports:
+      - "8088:8088"
+    environment:
+      - SUPERSET_SECRET_KEY=your-secret-key
+      - FLASK_APP=superset.app:create_app()
+      - SUPERSET_DATABASE_URI=postgresql+psycopg2://superset:superset@postgres/superset
+      - POSTGRES_USER=superset
+      - POSTGRES_PASSWORD=superset
+      - POSTGRES_DB=superset
+      - SUPERSET_LOAD_EXAMPLES=yes
+    depends_on:
+      - postgres
+    volumes:
+      - superset-data:/app/superset_home
+    restart: always
+    command: >
+      sh -c "
+      pip install clickhouse-connect &&
+      superset db upgrade &&
+      superset init &&
+      superset fab create-admin --username admin --firstname Superset --lastname Admin --email admin@superset.com --password admin &&
+      /usr/bin/run-server.sh
+      "
 
 volumes:
   postgres-db-volume:
   minio-data:
   clickhouse-data:
   clickhouse-config:
+  superset-data:
