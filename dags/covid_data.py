@@ -36,7 +36,7 @@ def get_minio_client():
         endpoint_url=conn.host+':'+str(conn.port),
         aws_access_key_id=conn.login,
         aws_secret_access_key=conn.password
-        ) 
+        )
 
 
 def upload_dataset():
@@ -49,7 +49,8 @@ def upload_dataset():
             path='us-counties.csv', pandas_kwargs={'on_bad_lines': 'skip'})
         assert not df.empty, "Downloaded DataFrame is empty"
         required_columns = {'date', 'county', 'state', 'cases', 'deaths'}
-        assert required_columns.issubset(df.columns), f"Missing required columns: {required_columns - set(df.columns)}"
+        assert required_columns.issubset(df.columns), \
+            f"Missing required columns: {required_columns - set(df.columns)}"
 
         # Calling boto3 client
         logger.info("Calling boto3 client")
@@ -57,7 +58,6 @@ def upload_dataset():
         bucket_name = 'covid'
 
         try:
-            # Get extra data from s3 as pd-dataframe (It was put there in advance)
             response = s3.get_object(
                 Bucket=bucket_name,
                 Key='exstra_data.csv'
@@ -71,7 +71,7 @@ def upload_dataset():
             df['date'] = pd.to_datetime(df['date'],  errors='coerce')
             df['county'] = df['county'].astype('string')
             df['state'] = df['state'].astype('string')
-            df['ISO'] = df['ISO'].astype('string')     
+            df['ISO'] = df['ISO'].astype('string')
             logger.info("Pushing data to Minio")
             # Put data to s3 as parquet
             parquet_buffer = BytesIO()
